@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: sumup
+    description: "Raw data loaded from Excel files via dlt"
+    database: main 
+    schema: main   
+    tables:
+      - name: stores
+        description: "Raw stores data"
+      - name: devices
+        description: "Raw devices data"
+      - name: transactions
+        description: "Raw transactions data"

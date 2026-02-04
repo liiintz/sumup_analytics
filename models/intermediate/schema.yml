@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  # ============================================================================
+  # INTERMEDIATE LAYER - Business logic and joins
+  # ============================================================================
+  - name: int_transactions_joined
+    description: "Intermediate table joining transactions with devices to compute denormalization keys."
+    columns:
+      - name: transaction_id
+        description: "Transaction identifier"
+        data_tests:
+          - unique
+          - not_null
+      
+      - name: device_id
+        description: "Device identifier"
+      
+      - name: store_id
+        description: "Store location (joined from stg_devices)"
+      
+      - name: product_sku
+        description: "Product purchased"
+      
+      - name: amount_eur
+        description: "Transaction amount in EUR"
+      
+      - name: transaction_status
+        description: "Status (completed/failed)"
+      
+      - name: transaction_at
+        description: "When transaction occurred"
+      
+      - name: record_created_at
+        description: "When record was created"

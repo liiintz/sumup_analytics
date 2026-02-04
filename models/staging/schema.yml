@@ -1,0 +1,120 @@
+version: 2
+
+models:
+  # ============================================================================
+  # STAGING LAYER - Raw data cleaning and standardization
+  # ============================================================================
+  - name: stg_stores
+    description: "Staging table for stores - loads from raw stores source"
+    columns:
+      - name: store_id
+        description: "Primary key - unique store identifier"
+        data_tests:
+          - not_null
+          - unique
+      
+      - name: store_name
+        description: "Name of the store"
+        data_tests:
+          - not_null
+      
+      - name: store_address
+        description: "Physical address of the store"
+      
+      - name: store_city
+        description: "City where the store is located"
+      
+      - name: store_country
+        description: "Country where the store is located"
+        data_tests:
+          - not_null
+      
+      - name: store_typology
+        description: "Store classification"
+      
+      - name: customer_id
+        description: "Customer owner of this store"
+        data_tests:
+          - not_null
+      
+      - name: created_at
+        description: "Timestamp when store was created in source system"
+        data_tests:
+          - not_null
+      
+      - name: dbt_loaded_at
+        description: "dbt load timestamp"
+        data_tests:
+          - not_null
+
+  - name: stg_devices
+    description: "Staging table for devices - loads from raw devices source"
+    columns:
+      - name: device_id
+        description: "Primary key - unique device identifier"
+        data_tests:
+          - not_null
+          - unique
+      
+      - name: device_type
+        description: "Type of payment device (1-5)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+      
+      - name: store_id
+        description: "Foreign key - store where device is located"
+        data_tests:
+          - not_null
+      
+      - name: dbt_loaded_at
+        description: "dbt load timestamp"
+        data_tests:
+          - not_null
+
+  - name: stg_transactions
+    description: "Staging table for transactions - loads from raw transactions source"
+    columns:
+      - name: transaction_id
+        description: "Primary key - transaction identifier"
+        data_tests:
+          - not_null
+          - unique
+      
+      - name: device_id
+        description: "Foreign key - device used"
+        data_tests:
+          - not_null
+      
+      - name: product_sku
+        description: "Product SKU identifier"
+      
+      - name: amount_eur
+        description: "Transaction amount in EUR"
+        data_tests:
+          - not_null
+      
+      - name: transaction_status
+        description: "Standardized status (completed, failed, cancelled)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['completed', 'failed', 'cancelled']
+      
+      - name: transaction_at
+        description: "When transaction occurred"
+        data_tests:
+          - not_null
+      
+      - name: record_created_at
+        description: "When record was created in source"
+        data_tests:
+          - not_null
+      
+      - name: dbt_loaded_at
+        description: "dbt load timestamp"
+        data_tests:
+          - not_null

@@ -1,0 +1,162 @@
+version: 2
+
+models:
+  # ============================================================================
+  # MARTS LAYER - Business-ready dimensional and fact tables
+  # ============================================================================
+  - name: dim_stores
+    description: "Dimension table for store attributes"
+    columns:
+      - name: store_id
+        data_type: bigint
+        description: "Primary key - store identifier"
+        tests:
+          - unique
+          - not_null
+      
+      - name: store_name
+        data_type: text
+        description: "Store name"
+        tests:
+          - not_null
+      
+      - name: store_address
+        data_type: text
+        description: "Store physical address"
+      
+      - name: store_city
+        data_type: text
+        description: "Store city"
+      
+      - name: store_country
+        data_type: text
+        description: "Store country"
+        tests:
+          - not_null
+      
+      - name: store_typology
+        data_type: text
+        description: "Store type/classification"
+      
+      - name: customer_id
+        data_type: bigint
+        description: "Customer who owns this store"
+        tests:
+          - not_null
+      
+      - name: created_at
+        data_type: timestamp
+        description: "Store creation date in source system"
+      
+      - name: dbt_updated_at
+        data_type: timestamp
+        description: "Timestamp when dimension table was last refreshed"
+        tests:
+          - not_null
+
+  - name: dim_devices
+    description: "Dimension table for payment devices"
+    columns:
+      - name: device_id
+        data_type: bigint
+        description: "Primary key - device identifier"
+        tests:
+          - unique
+          - not_null
+      
+      - name: device_type
+        data_type: bigint
+        description: "Device type (1-5 representing different hardware models)"
+        tests:
+          - not_null
+      
+      - name: store_id
+        data_type: bigint
+        description: "Foreign key - store location of device"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_stores')
+              field: store_id
+              severity: warn
+      
+      - name: dbt_updated_at
+        data_type: timestamp
+        description: "Timestamp when dimension table was last refreshed"
+        tests:
+          - not_null
+
+  - name: fact_transactions
+    description: |
+      Fact table for payment transactions.
+      
+      **Grain:** One row per transaction
+      **Strategy:** Incremental with merge 
+      
+      Contains only:
+      - Foreign keys to dimensions (store_id, device_id, product_sku)
+      - Measures (amount_eur in euros)
+      - Timestamps and Status
+    columns:
+      - name: transaction_id
+        data_type: bigint
+        description: "Primary key - unique transaction identifier"
+        tests:
+          - unique
+          - not_null
+      
+      - name: device_id
+        data_type: bigint
+        description: "Foreign key - device used in transaction"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_devices')
+              field: device_id
+              severity: warn
+      
+      - name: store_id
+        data_type: bigint
+        description: "Foreign key - store where transaction occurred"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_stores')
+              field: store_id
+              severity: warn
+      
+      - name: product_sku
+        data_type: text
+        description: "Foreign key - product purchased"
+        tests:
+          - not_null
+      
+      - name: amount_eur
+        data_type: decimal
+        description: "Transaction amount in EUR (measure) - currency is always Euros"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0.01
+              max_value: 100000
+      
+      - name: transaction_status
+        data_type: text
+        description: "Status of transaction (completed, failed, cancelled)"
+        tests:
+          - accepted_values:
+              values: ['completed', 'failed', 'cancelled']
+      
+      - name: transaction_at
+        data_type: timestamp
+        description: "When the transaction occurred in source system"
+      
+      - name: record_created_at
+        data_type: timestamp
+        description: "When the transaction record was created"
+        tests:
+          - not_null
+      
+      - name: dbt_updated_at
+        data_type: timestamp
+        description: "Metadata: when the record was last updated by dbt"
